@@ -89,6 +89,40 @@ const CountryFlag = memo(({ countryCode, className = "w-8 h-6" }: { countryCode:
 });
 CountryFlag.displayName = 'CountryFlag';
 
+// --- Toast 提示组件 ---
+interface ToastProps {
+  message: string;
+  type?: 'success' | 'error' | 'info';
+  isVisible: boolean;
+  onClose: () => void;
+}
+
+const Toast = memo(({ message, type = 'success', isVisible, onClose }: ToastProps) => {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(onClose, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onClose]);
+
+  if (!isVisible) return null;
+
+  const bgColor = type === 'success' ? 'bg-[#34C759]' : type === 'error' ? 'bg-[#FF3B30]' : 'bg-[#007AFF]';
+  const icon = type === 'success' ? 'check' : type === 'error' ? 'close' : 'inbox';
+
+  return (
+    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[100] animate-slideDown">
+      <div className={`${bgColor} px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 backdrop-blur-xl`}>
+        <div className="bg-white/20 rounded-full p-1">
+          <Icon name={icon} className="w-4 h-4 text-white" />
+        </div>
+        <span className="text-white font-semibold text-[15px]">{message}</span>
+      </div>
+    </div>
+  );
+});
+Toast.displayName = 'Toast';
+
 // --- 类型定义 ---
 interface UserInfo {
   firstName: string;
@@ -449,6 +483,22 @@ export default function GlassStylePage() {
   const [isSaved, setIsSaved] = useState(false);
   const [showMenuGuide, setShowMenuGuide] = useState(false);
 
+  // Toast 状态
+  const [toast, setToast] = useState<{ isVisible: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    isVisible: false,
+    message: '',
+    type: 'success'
+  });
+
+  // Toast 辅助函数
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToast({ isVisible: true, message, type });
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  }, []);
+
   const copyTimerRef = useRef<NodeJS.Timeout | null>(null);
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -481,10 +531,12 @@ export default function GlassStylePage() {
       if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
       setCopiedField(label);
       copyTimerRef.current = setTimeout(() => setCopiedField(null), 1500);
-    } catch { 
-      haptic(50); 
+      showToast('已复制到剪贴板', 'success');
+    } catch {
+      haptic(50);
+      showToast('复制失败', 'error');
     }
-  }, []);
+  }, [showToast]);
 
   const generate = useCallback(() => {
     haptic(50);
@@ -508,10 +560,10 @@ export default function GlassStylePage() {
   // 保存身份信息
   const handleSaveIdentity = useCallback(() => {
     if (saveStatus === 'saving' || isSaved || !userInfo.email) return;
-    
+
     haptic(30);
     setSaveStatus('saving');
-    
+
     // 模拟保存动画
     setTimeout(() => {
       addIdentity({
@@ -524,16 +576,17 @@ export default function GlassStylePage() {
         countryCode: selectedCountry.code,
         countryName: selectedCountry.name,
       });
-      
+
       setSaveStatus('saved');
       setIsSaved(true);
-      
+      showToast('身份已保存', 'success');
+
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
       saveTimerRef.current = setTimeout(() => {
         setSaveStatus('idle');
       }, 2000);
     }, 300);
-  }, [userInfo, selectedCountry, saveStatus, isSaved]);
+  }, [userInfo, selectedCountry, saveStatus, isSaved, showToast]);
 
   // 检查当前身份是否已保存
   useEffect(() => {
@@ -678,6 +731,14 @@ export default function GlassStylePage() {
 
       {/* 菜单引导提示 */}
       {showMenuGuide && <MenuGuide onDismiss={handleDismissGuide} />}
+
+      {/* Toast 通知 */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+      />
 
       {/* 沉浸模式恢复层 */}
       {isImmersive && (
