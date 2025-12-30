@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, memo, useRef } from 'react';
+import { useState, useEffect, useCallback, memo, useRef, lazy, Suspense } from 'react';
 import { getSavedIdentities, removeIdentity, type SavedIdentity } from '@/lib/identityData';
-import { NavigationMenu, MenuButton } from '@/components/NavigationMenu';
+import { MenuButton } from '@/components/NavigationMenu';
 import { Icon } from '@/components/Icon';
 import { haptic } from '@/lib/utils';
+
+const NavigationMenu = lazy(() => import('@/components/NavigationMenu').then(mod => ({ default: mod.NavigationMenu })));
 
 interface DeleteConfirmModalProps {
   isOpen: boolean;
@@ -265,7 +267,11 @@ export default function SavedIdentitiesPage() {
         </main>
       </div>
 
-      <NavigationMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
+      {showMenu && (
+        <Suspense fallback={null}>
+          <NavigationMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
+        </Suspense>
+      )}
       <DeleteConfirmModal
         isOpen={deleteConfirm.isOpen}
         identityName={deleteConfirm.identity ? `${deleteConfirm.identity.lastName} ${deleteConfirm.identity.firstName}` : ''}

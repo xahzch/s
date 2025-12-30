@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, memo, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, memo, useRef, useMemo, lazy, Suspense } from 'react';
 import { FreeNoticeModal } from './FreeNoticeModal';
-import { NavigationMenu, MenuButton } from '@/components/NavigationMenu';
+import { MenuButton } from '@/components/NavigationMenu';
 import { countries, CountryConfig } from '@/lib/countryData';
 import { Icon } from '@/components/Icon';
+
+const NavigationMenu = lazy(() => import('@/components/NavigationMenu').then(mod => ({ default: mod.NavigationMenu })));
 import { haptic } from '@/lib/utils';
 import { loadFlagIcon, preloadTopFlags } from '@/lib/flagCache';
 import {
@@ -940,7 +942,11 @@ export default function GlassStylePage() {
       </BottomSheet>
 
       {/* 导航菜单 */}
-      <NavigationMenu isOpen={showMenu} onClose={handleCloseMenu} />
+      {showMenu && (
+        <Suspense fallback={null}>
+          <NavigationMenu isOpen={showMenu} onClose={handleCloseMenu} />
+        </Suspense>
+      )}
 
       {/* 样式 */}
       <style jsx global>{`

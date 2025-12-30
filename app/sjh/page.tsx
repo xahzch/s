@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef, memo, lazy, Suspense } from 'react';
 import { countries, generatePhoneNumber, searchCountries, type CountryData } from '@/lib/phoneData';
-import { NavigationMenu, MenuButton } from '@/components/NavigationMenu';
+import { MenuButton } from '@/components/NavigationMenu';
 import { Icon } from '@/components/Icon';
 import { haptic } from '@/lib/utils';
+
+const NavigationMenu = lazy(() => import('@/components/NavigationMenu').then(mod => ({ default: mod.NavigationMenu })));
 
 // 动态导入国旗库（按需加载）
 const loadFlagIcon = async (countryCode: string) => {
@@ -537,7 +539,11 @@ export default function PhoneGeneratorPage() {
         currentCountry={selectedCountry}
       />
 
-      <NavigationMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
+      {showMenu && (
+        <Suspense fallback={null}>
+          <NavigationMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
+        </Suspense>
+      )}
 
       <style jsx global>{`
         * {

@@ -48,8 +48,8 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* 平滑过渡 - 移动端优化 */
-* {
+/* 平滑过渡 - 仅限交互元素 */
+button, [role="button"], a, input, textarea, select {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
@@ -57,7 +57,7 @@ body {
 
 /* 移动端禁用过渡以提升性能 */
 @media (hover: none) and (pointer: coarse) {
-  * {
+  button, [role="button"], a, input, textarea, select {
     transition-duration: 0ms;
   }
 

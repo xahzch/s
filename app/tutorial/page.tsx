@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { NavigationMenu, MenuButton } from '@/components/NavigationMenu';
+import { useState, useCallback, lazy, Suspense } from 'react';
+import { MenuButton } from '@/components/NavigationMenu';
 import { Icon } from '@/components/Icon';
+
+const NavigationMenu = lazy(() => import('@/components/NavigationMenu').then(mod => ({ default: mod.NavigationMenu })));
 
 // 教程消息数据
 const TUTORIALS = [
@@ -106,7 +108,11 @@ export default function TutorialPage() {
   return (
     <div className="min-h-screen relative font-sans text-white pb-10 selection:bg-blue-400/30 overflow-x-hidden">
       {/* 导航菜单 */}
-      <NavigationMenu isOpen={showMenu} onClose={handleCloseMenu} />
+      {showMenu && (
+        <Suspense fallback={null}>
+          <NavigationMenu isOpen={showMenu} onClose={handleCloseMenu} />
+        </Suspense>
+      )}
 
       {/* 内容层 */}
       <div className="relative z-10">

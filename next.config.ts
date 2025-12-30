@@ -17,16 +17,42 @@ const nextConfig: NextConfig = {
 
   // 优化包导入
   experimental: {
-    optimizePackageImports: ['country-flag-icons'],
+    optimizePackageImports: ['country-flag-icons', 'lucide-react'],
+    optimizeCss: true,
   },
 
   // 生产环境优化
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
   compress: true,
+  swcMinify: true,
 
   // React 编译优化
   reactStrictMode: true,
+
+  // Headers for caching optimization
+  async headers() {
+    return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60, stale-while-revalidate=120'
+          }
+        ]
+      },
+      {
+        source: '/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      }
+    ];
+  }
 };
 
 export default nextConfig;

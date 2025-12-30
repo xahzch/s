@@ -58,7 +58,7 @@ export default function RootLayout({
         {/* 51.la 统计代码 - 修复版本 */}
         <Script
           id="la-all"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {

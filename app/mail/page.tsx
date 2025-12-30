@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo, useRef, lazy, Suspense } from 'react';
 import { tempMailList, isFavorite, toggleFavorite, type TempMail } from '@/lib/mailData';
-import { NavigationMenu, MenuButton } from '@/components/NavigationMenu';
+import { MenuButton } from '@/components/NavigationMenu';
 import { Icon } from '@/components/Icon';
 import { haptic } from '@/lib/utils';
+
+const NavigationMenu = lazy(() => import('@/components/NavigationMenu').then(mod => ({ default: mod.NavigationMenu })));
 
 interface MailCardProps {
   mail: TempMail;
@@ -83,6 +85,13 @@ export default function MailPage() {
     setFavorites(favs);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+    };
+  }, []);
+
   // 搜索防抖
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -117,11 +126,17 @@ export default function MailPage() {
     });
   }, []);
 
+  const copiedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleCopy = useCallback(async (url: string, id: string) => {
     try {
       await navigator.clipboard.writeText(url);
       setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 1500);
+      if (copiedTimeoutRef.current) clearTimeout(copiedTimeoutRef.current);
+      copiedTimeoutRef.current = setTimeout(() => {
+        setCopiedId(null);
+        copiedTimeoutRef.current = null;
+      }, 1500);
     } catch (error) {
       console.error('Copy failed:', error);
       haptic(50);
@@ -183,7 +198,11 @@ export default function MailPage() {
         </main>
       </div>
 
-      <NavigationMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
+      {showMenu && (
+        <Suspense fallback={null}>
+          <NavigationMenu isOpen={showMenu} onClose={() => setShowMenu(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }
